@@ -99,6 +99,15 @@ class PermissionRepository:
         action: str,
     ) -> PermissionLevel:
         """Return the permission level, defaulting to ASK if not configured."""
+        res_type_lower = (resource_type or "").lower()
+        res_name_lower = (resource_name or "").lower()
+        action_lower = (action or "").lower()
+
+        # Privacy-sensitive areas (camera, webcam, mic, location) MUST ask permission EVERY TIME
+        privacy_keywords = ["camera", "webcam", "mic", "microphone", "privacy", "video_capture"]
+        if any(kw in res_name_lower or kw in res_type_lower for kw in privacy_keywords):
+            return PermissionLevel.ASK
+
         perm = (
             self.db.query(Permission)
             .filter(
@@ -108,7 +117,24 @@ class PermissionRepository:
             )
             .first()
         )
-        return perm.level if perm else PermissionLevel.ASK
+        if not perm:
+            perm = (
+                self.db.query(Permission)
+                .filter(
+                    Permission.resource_type == resource_type,
+                    Permission.resource_name == resource_name,
+                )
+                .first()
+            )
+        if perm:
+            return perm.level
+
+        # Safe read/view/launch operations default to ALLOW
+        if res_type_lower in ["application", "website"] or action_lower in ["open", "open_app", "navigate", "read", "read_file", "list_dir", "system_info", "notify"]:
+            return PermissionLevel.ALLOW
+
+        return PermissionLevel.ASK
+
 
     def set_permission(
         self,

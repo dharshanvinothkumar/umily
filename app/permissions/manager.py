@@ -30,6 +30,15 @@ class PermissionManager:
             action=step.action,
         )
 
+        # Force ASK every time for privacy-sensitive areas (cameras, webcams, microphones)
+        desc_lower = (step.description or "").lower()
+        res_name_lower = (step.resource_name or "").lower()
+        res_type_lower = (step.resource_type or "").lower()
+        privacy_keywords = ["camera", "webcam", "mic", "microphone", "privacy", "video_capture"]
+
+        if any(kw in desc_lower or kw in res_name_lower or kw in res_type_lower for kw in privacy_keywords):
+            level = PermissionLevel.ASK
+
         # Force ASK if step explicitly requires confirmation (e.g. destructive action flagged by AI)
         if level == PermissionLevel.ALLOW and step.requires_confirmation:
             level = PermissionLevel.ASK
@@ -38,4 +47,5 @@ class PermissionManager:
             f"Permission check: [{step.resource_type}:{step.resource_name}] "
             f"action='{step.action}' → Level={level.value}"
         )
+
         return level

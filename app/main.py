@@ -24,6 +24,7 @@ from app.api.routes_voice import router as voice_router
 from app.api.routes_permissions import router as permissions_router
 from app.api.routes_tasks import router as tasks_router
 from app.api.routes_system import router as system_router
+from app.api.routes_background import router as background_router
 
 
 # ---------------------------------------------------------------------------
@@ -89,6 +90,7 @@ app.include_router(voice_router, prefix="/api")
 app.include_router(permissions_router, prefix="/api")
 app.include_router(tasks_router, prefix="/api")
 app.include_router(system_router, prefix="/api")
+app.include_router(background_router, prefix="/api")
 
 
 # ---------------------------------------------------------------------------

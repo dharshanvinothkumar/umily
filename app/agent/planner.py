@@ -35,12 +35,15 @@ class AgentPlanner:
             steps = [ActionStep(**s) for s in raw_plan.get("steps", [])]
             plan = ActionPlan(
                 summary=raw_plan.get("summary", f"Plan for: {command}"),
+                intent_type=raw_plan.get("intent_type", "COMPUTER_TASK"),
+                answer=raw_plan.get("answer"),
                 steps=steps,
             )
         except Exception as e:
             logger.error(f"Failed to parse plan schema: {e}. Falling back to default plan.")
             plan = ActionPlan(
                 summary=f"Execution plan for: {command}",
+                intent_type="COMPUTER_TASK",
                 steps=[
                     ActionStep(
                         step_id=1,
@@ -57,5 +60,5 @@ class AgentPlanner:
 
         # Persist plan in task database record
         self.task_repo.update_plan(task_id, plan.model_dump())
-        logger.info(f"Plan created for Task #{task_id} with {len(plan.steps)} step(s)")
+        logger.info(f"Plan created for Task #{task_id} (intent={plan.intent_type}) with {len(plan.steps)} step(s)")
         return plan

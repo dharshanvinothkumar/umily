@@ -1,0 +1,89 @@
+==============================================================================
+                    UMILY — STEP-BY-STEP EXECUTION GUIDE
+==============================================================================
+
+Project: Umily (Voice-first, permission-controlled AI computer agent for Windows)
+Location: e:\projects\umily
+
+------------------------------------------------------------------------------
+STEP 1: OPEN TERMINAL & NAVIGATE TO PROJECT DIRECTORY
+------------------------------------------------------------------------------
+Open Windows PowerShell or Command Prompt, then run:
+
+    cd e:\projects\umily
+
+------------------------------------------------------------------------------
+STEP 2: VIRTUAL ENVIRONMENT SETUP & DEPENDENCY INSTALLATION
+------------------------------------------------------------------------------
+Activate the virtual environment and install all dependencies:
+
+    .\venv\Scripts\activate
+    pip install -r requirements.txt
+
+------------------------------------------------------------------------------
+STEP 3: CONFIGURE ENVIRONMENT VARIABLES (.env)
+------------------------------------------------------------------------------
+Copy .env.example to .env (if not already present) and add your Gemini API Key:
+
+    copy .env.example .env
+
+Open .env in a text editor and set:
+
+    GEMINI_API_KEY=your_actual_gemini_api_key_here
+
+*(Note: If no API key is provided, Umily automatically runs in local fallback mode).*
+
+------------------------------------------------------------------------------
+STEP 4: RUN FULL TEST SUITE
+------------------------------------------------------------------------------
+Verify that all 17 phases (39 test cases) pass successfully:
+
+    pytest tests/ -v
+
+Expected result: 39 passed in ~1-2s.
+
+------------------------------------------------------------------------------
+STEP 5: START THE UMILY BACKEND & CONTROL CENTER SERVER
+------------------------------------------------------------------------------
+Launch the FastAPI uvicorn development server:
+
+    python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+
+------------------------------------------------------------------------------
+STEP 6: ACCESS CONTROL CENTER DASHBOARD
+------------------------------------------------------------------------------
+Open your web browser and navigate to:
+
+    http://127.0.0.1:8000
+
+Features available in Control Center:
+  - Command input box (Submit natural language commands)
+  - Live task status & live step log execution
+  - Permission rules manager (ALLOW / ASK / BLOCK)
+  - Voice Command input & STT/TTS speech synthesizer
+  - System status & background daemon monitor
+
+------------------------------------------------------------------------------
+STEP 7: TESTING API ENDPOINTS DIRECTLY (SWAGGER UI & CURL)
+------------------------------------------------------------------------------
+A. View Interactive Swagger API Documentation:
+   http://127.0.0.1:8000/docs
+
+B. Submit a Text Command via cURL or PowerShell:
+   curl -X POST "http://127.0.0.1:8000/api/command" ^
+        -H "Content-Type: application/json" ^
+        -d "{\"command\": \"Open browser and search for Umily status\"}"
+
+C. Check Background Daemon Status:
+   curl -X GET "http://127.0.0.1:8000/api/background/status"
+
+D. Submit a Voice Command:
+   curl -X POST "http://127.0.0.1:8000/api/voice" ^
+        -F "text_fallback=Check system health"
+
+------------------------------------------------------------------------------
+STEP 8: SHUTDOWN
+------------------------------------------------------------------------------
+Press Ctrl + C in the terminal window running Uvicorn to stop the server.
+
+==============================================================================

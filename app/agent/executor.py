@@ -44,8 +44,33 @@ class AgentExecutor:
                 error="Task not found in DB",
             )
 
+        # Terminal state protection: never re-execute completed, failed, or cancelled tasks
+        if task.status in [TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELLED]:
+            logger.warning(f"Task #{task_id} is in terminal state '{task.status.value}'. Execution rejected.")
+            return ActionResult(
+                success=(task.status == TaskStatus.COMPLETED),
+                status=task.status.value,
+                message=f"Task #{task_id} is already in terminal state '{task.status.value}'.",
+                completed_steps=len(task.actions or []),
+                total_steps=len(plan.steps),
+            )
+
         executed_actions: List[dict] = task.actions or []
         completed_count = start_step_idx
+
+
+        # If plan is a general knowledge question (0 steps), return answer directly without computer permissions
+        if plan.intent_type == "QUESTION" or (len(plan.steps) == 0 and plan.answer):
+            ans = plan.answer or f"Answer for '{task.command}'"
+            self.task_repo.update_status(task_id, TaskStatus.COMPLETED, result=ans)
+            logger.info(f"Task #{task_id} completed general question with direct answer.")
+            return ActionResult(
+                success=True,
+                status="completed",
+                message=ans,
+                completed_steps=0,
+                total_steps=0,
+            )
 
         for idx in range(start_step_idx, len(plan.steps)):
             step = plan.steps[idx]

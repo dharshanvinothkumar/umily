@@ -52,6 +52,17 @@
     let isSending = false;
     let taskPollTimer = null;
 
+    // Helper
+    function escapeHTML(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
     // =========================================================================
     // API Helpers
     // =========================================================================
@@ -203,11 +214,13 @@
             taskResultBox.className = 'task-result-box success';
             taskResultBox.innerHTML = `<strong>✓ TASK COMPLETED</strong><br>${escapeHTML(task.result || 'Command executed successfully.')}`;
             stopTaskPolling();
+            activeTaskId = null;
         } else if (task.status === 'failed' || task.status === 'cancelled') {
             taskResultBox.style.display = 'block';
             taskResultBox.className = 'task-result-box error';
             taskResultBox.innerHTML = `<strong>× TASK ${task.status.toUpperCase()}</strong><br>${escapeHTML(task.error || task.result || 'Action was aborted or blocked.')}`;
             stopTaskPolling();
+            activeTaskId = null;
         } else {
             taskResultBox.style.display = 'none';
         }
@@ -256,14 +269,23 @@
     // =========================================================================
     // Real-Time Task Polling
     // =========================================================================
+    let pollCount = 0;
     function startTaskPolling(taskId) {
         stopTaskPolling();
+        pollCount = 0;
         taskPollTimer = setInterval(async () => {
+            pollCount++;
             try {
                 const taskData = await apiGet(`/tasks/${taskId}`);
                 updateLiveActivity(taskData);
+                if (pollCount > 10 && (taskData.status === 'executing' || taskData.status === 'pending')) {
+                    // Safety timeout after 30s
+                    stopTaskPolling();
+                    activeTaskId = null;
+                }
             } catch {
                 stopTaskPolling();
+                activeTaskId = null;
             }
         }, TASK_POLL_MS);
     }

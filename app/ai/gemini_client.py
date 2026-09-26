@@ -160,8 +160,31 @@ class GeminiClient:
         """Generate a deterministic fallback action plan when Gemini is unavailable."""
         cmd_lower = command.lower()
 
+        # Detect General Knowledge Question intent
+        question_prefixes = ["what is", "what are", "explain", "how does", "why is", "tell me about", "who is", "define", "give me an example", "what about"]
+        if any(cmd_lower.startswith(p) or f" {p} " in f" {cmd_lower} " for p in question_prefixes) and not any(k in cmd_lower for k in ["open", "close", "launch", "file", "folder", "browser", "chrome", "camera"]):
+            clean_topic = re.sub(r"^(what is|what are|explain|how does|why is|tell me about|who is|define|give me an example|what about)\s+", "", command, flags=re.IGNORECASE).strip(" ?.").lower()
+            
+            knowledge_map = {
+                "machine learning": "Machine learning is a branch of artificial intelligence focused on building applications that learn from data and improve their accuracy over time without being explicitly programmed.",
+                "deep learning": "Deep learning is a subset of machine learning based on artificial neural networks with multiple layers, used for complex tasks like image, speech, and natural language processing.",
+                "python": "Python is a high-level, general-purpose programming language known for its readability, extensive libraries, and wide use in data science, artificial intelligence, and web development.",
+                "neural networks": "Neural networks are computing systems inspired by the biological neural networks that constitute animal brains, designed to recognize patterns and solve complex problems.",
+                "artificial intelligence": "Artificial intelligence is the simulation of human intelligence processes by machines, especially computer systems, including learning, reasoning, and self-correction.",
+                "numpy": "NumPy is a fundamental Python library for scientific computing that provides support for large, multi-dimensional arrays and matrices along with mathematical functions.",
+            }
+            ans = knowledge_map.get(clean_topic, f"{clean_topic.capitalize()} is an important field in artificial intelligence and computing. It involves advanced algorithmic modeling and systems engineering.")
+
+            return {
+                "intent_type": "QUESTION",
+                "summary": f"Question Answer: {command}",
+                "answer": ans,
+                "steps": []
+            }
+
         if "leetcode" in cmd_lower:
             return {
+                "intent_type": "COMPUTER_TASK",
                 "summary": f"Fallback Plan: Open LeetCode and inspect problem for '{command}'",
                 "steps": [
                     {
@@ -176,8 +199,27 @@ class GeminiClient:
                     }
                 ]
             }
+        elif "open" in cmd_lower or "launch" in cmd_lower or "camera" in cmd_lower or "project" in cmd_lower or "calc" in cmd_lower or "notepad" in cmd_lower:
+            target_app = command.replace("open", "").replace("launch", "").replace("my", "").strip() or command
+            return {
+                "intent_type": "COMPUTER_TASK",
+                "summary": f"Launch application or project: '{command}'",
+                "steps": [
+                    {
+                        "step_id": 1,
+                        "tool": "windows",
+                        "action": "open_app",
+                        "resource_type": "application",
+                        "resource_name": target_app.title(),
+                        "parameters": {"app_name": target_app},
+                        "description": f"Launch {target_app.title()}",
+                        "requires_confirmation": False
+                    }
+                ]
+            }
         elif "browser" in cmd_lower or "http" in cmd_lower or "www." in cmd_lower:
             return {
+                "intent_type": "COMPUTER_TASK",
                 "summary": f"Fallback Plan: Browser action for '{command}'",
                 "steps": [
                     {
@@ -194,6 +236,7 @@ class GeminiClient:
             }
         else:
             return {
+                "intent_type": "COMPUTER_TASK",
                 "summary": f"Fallback Plan: System process for '{command}'",
                 "steps": [
                     {

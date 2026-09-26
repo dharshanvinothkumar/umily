@@ -139,9 +139,9 @@ pytest tests/ -v
 5. ✅ **Phase 5** — Browser automation (Playwright tool system)
 6. ✅ **Phase 6–8** — LeetCode agent, adaptive error recovery, confirmation loop
 7. ✅ **Phase 9–11** — Windows automation, filesystem tools, desktop system commands
-8. ⬜ **Phase 12–14** — Voice pipeline (STT, wake word, TTS)
-9. ⬜ **Phase 15–16** — Background mode, system tray
-10. ⬜ **Phase 17** — Polish and testing
+8. ✅ **Phase 12–14** — Voice pipeline (STT, wake word, TTS)
+9. ✅ **Phase 15–16** — Background mode, system tray
+10. ✅ **Phase 17** — Polish and complete test suite (39/39 passing tests)
 
 ---
 

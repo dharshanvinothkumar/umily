@@ -111,6 +111,7 @@ body::before {
     letter-spacing: 0.08em;
     background: var(--burgundy-gradient);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 

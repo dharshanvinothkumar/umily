@@ -113,7 +113,7 @@ def test_set_and_list_permissions(client):
 # ---------------------------------------------------------------------------
 
 def test_voice_placeholder(client):
-    """POST /api/voice should return not-implemented status."""
-    response = client.post("/api/voice")
+    """POST /api/voice handles voice command endpoint."""
+    response = client.post("/api/voice", data={"text_fallback": "Ping"})
     assert response.status_code == 200
-    assert response.json()["status"] == "not_implemented"
+    assert "transcript" in response.json()
