@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Umily — Personal AI Assistant for Windows">
+    <title>UMILY — Personal Assistant</title>
+    <!-- Premium Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍷</text></svg>">
+</head>
+<body>
+    <div class="app-layout">
+
+        <!-- ===== Top Header ===== -->
+        <header class="app-header" id="app-header">
+            <div class="brand-container">
+                <h1 class="brand-title">UMILY</h1>
+                <span class="brand-subtitle">Personal Assistant</span>
+            </div>
+            <div class="status-container" id="status-container">
+                <span class="status-indicator-dot idle" id="status-dot"></span>
+                <span class="status-label" id="status-text">Online</span>
+            </div>
+        </header>
+
+        <!-- ===== Main Body Layout ===== -->
+        <div class="app-body">
+
+            <!-- --- Main Conversation / Chat Panel --- -->
+            <section class="chat-section">
+                
+                <!-- Chat Messages Scroll Container -->
+                <div class="chat-history" id="chat-history">
+                    
+                    <!-- Welcome / Empty State -->
+                    <div class="welcome-container" id="welcome-container">
+                        <div class="welcome-badge">✦ UMILY ASSISTANT</div>
+                        <h2 class="welcome-title">What can I help you accomplish today?</h2>
+                        <p class="welcome-text">Umily is your permission-controlled personal AI agent. Ask me to open projects, navigate websites, inspect files, or manage applications.</p>
+                        
+                        <div class="suggestions-grid">
+                            <button class="suggestion-chip" data-cmd="Open my AI attendance project">
+                                <span class="chip-icon">📁</span> Open AI attendance project
+                            </button>
+                            <button class="suggestion-chip" data-cmd="Open LeetCode and find problem 58">
+                                <span class="chip-icon">🌐</span> Open LeetCode
+                            </button>
+                            <button class="suggestion-chip" data-cmd="Check my system status and specs">
+                                <span class="chip-icon">💻</span> Check system status
+                            </button>
+                            <button class="suggestion-chip" data-cmd="Search for python files in project folder">
+                                <span class="chip-icon">🔍</span> Find Python files
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Chat Messages Inserted Here -->
+                </div>
+
+                <!-- Command Input Bar -->
+                <div class="command-bar-wrapper">
+                    <div class="command-bar">
+                        <input
+                            type="text"
+                            class="command-input"
+                            id="command-input"
+                            placeholder="Ask Umily to do something…"
+                            autocomplete="off"
+                            spellcheck="false"
+                        >
+                        <button class="send-btn" id="btn-send" disabled title="Send command">
+                            <span id="btn-send-label">➤</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- --- Right-Side Live Activity Panel --- -->
+            aside class="activity-panel">
+                <div class="activity-panel-header">
+                    <div class="panel-title-group">
+                        <span class="panel-icon">⚡</span>
+                        <h3 class="panel-title">LIVE ACTIVITY</h3>
+                    </div>
+                    <button class="history-toggle-btn" id="btn-toggle-history" title="Recent Task History">History</button>
+                </div>
+
+                <div class="activity-panel-body">
+                    
+                    <!-- Current Task Card Header -->
+                    <div class="current-task-box" id="current-task-box">
+                        <div class="task-box-header">
+                            <span class="task-box-label">CURRENT TASK</span>
+                            <span class="task-status-badge idle" id="activity-task-badge">Idle</span>
+                        </div>
+                        <div class="task-box-command" id="activity-task-command">No active task running</div>
+                    </div>
+
+                    <!-- Embedded Confirmation Card (shown when confirmation is needed) -->
+                    <div class="confirmation-card" id="confirmation-card" style="display: none;">
+                        <div class="confirm-card-header">
+                            <span class="confirm-badge">! CONFIRMATION REQUIRED</span>
+                            <h4 class="confirm-card-title">Permission Request</h4>
+                        </div>
+                        <div class="confirm-card-body">
+                            <p id="confirm-card-desc">Umily requires your permission to execute this action.</p>
+                            <div class="confirm-details-box" id="confirm-card-details">
+                                <!-- Step details populated by JS -->
+                            </div>
+                        </div>
+                        <div class="confirm-card-actions">
+                            <button class="confirm-btn deny" id="btn-card-deny">Deny</button>
+                            <button class="confirm-btn allow" id="btn-card-allow">Allow</button>
+                        </div>
+                    </div>
+
+                    <!-- Step Execution Progress Timeline -->
+                    <div class="live-timeline-container" id="live-timeline-container">
+                        <div class="timeline-empty-msg" id="timeline-empty-msg">
+                            Step-by-step agent execution events will appear here in real-time.
+                        </div>
+                        <div class="live-timeline" id="live-timeline">
+                            <!-- Dynamic step timeline nodes -->
+                        </div>
+                    </div>
+
+                    <!-- Result / Failure Banner -->
+                    <div class="task-result-box" id="task-result-box" style="display: none;">
+                        <!-- Completion or Error summary -->
+                    </div>
+
+                </div>
+            </aside>
+
+        </div>
+    </div>
+
+    <!-- Modal for Task History Drawer / Overlay -->
+    <div class="history-modal-overlay" id="history-modal-overlay">
+        <div class="history-modal">
+            <div class="history-modal-header">
+                <h3>Recent Task History</h3>
+                <button class="close-btn" id="btn-close-history">✕</button>
+            </div>
+            <div class="history-modal-list" id="history-modal-list">
+                <!-- Task items -->
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

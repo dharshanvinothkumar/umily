@@ -1,0 +1,37 @@
+# ============================================
+# UMILY — Phase 1 Dependencies
+# ============================================
+
+# --- Backend ---
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+
+# --- Configuration ---
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+python-dotenv>=1.0.0
+
+# --- Database ---
+sqlalchemy>=2.0.23
+aiosqlite>=0.19.0
+
+# --- Logging ---
+loguru>=0.7.2
+
+# --- Testing ---
+pytest>=7.4.0
+httpx>=0.25.0
+
+# ============================================
+# Future Phase Dependencies (not yet required)
+# ============================================
+google-generativeai>=0.3.0    # Phase 2 — Gemini API
+# playwright                 # Phase 5 — Browser automation
+# pywinauto                  # Phase 9 — Windows automation
+# pyautogui                  # Phase 9 — Desktop fallback
+# faster-whisper             # Phase 12 — Speech-to-text
+# edge-tts                   # Phase 14 — Text-to-speech
+# openwakeword               # Phase 13 — Wake word
+# sounddevice                # Phase 12 — Microphone
+# numpy                      # Phase 12 — Audio processing
+# pystray                    # Phase 16 — System tray

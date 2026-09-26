@@ -1,0 +1,3 @@
+# This directory holds the SQLite database (umily.db).
+# The database file is created automatically on first run.
+# Do not commit .db files to version control.
