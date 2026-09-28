@@ -2,7 +2,7 @@
  * UMILY PERSONAL ASSISTANT — Frontend Logic
  *
  * Handles chat conversation, sticky command bar, real-time Live Activity panel,
- * and confirmation approval/denial workflows connected to FastAPI.
+ * voice recognition & popup indicator, and confirmation approval/denial workflows.
  */
 
 (() => {
@@ -26,6 +26,14 @@
     const commandInput = $('#command-input');
     const btnSend = $('#btn-send');
     const btnSendLabel = $('#btn-send-label');
+    const btnVoice = $('#btn-voice');
+
+    // Voice Pop-Up Symbol
+    const voicePopupOverlay = $('#voice-popup-overlay');
+    const voiceStatusLabel = $('#voice-status-label');
+    const voicePopupState = $('#voice-popup-state');
+    const voicePopupTranscript = $('#voice-popup-transcript');
+    const btnStopVoice = $('#btn-stop-voice');
 
     // Activity Panel
     const taskBadge = $('#activity-task-badge');
@@ -51,6 +59,8 @@
     let activeTaskId = null;
     let isSending = false;
     let taskPollTimer = null;
+    let isVoiceActive = false;
+    let recognition = null;
 
     // Helper
     function escapeHTML(str) {
@@ -83,6 +93,125 @@
     }
 
     // =========================================================================
+    // Voice Pop-Up Symbol & Speech Recognition Controller
+    // =========================================================================
+    function showVoicePopup(statusText, stateText, transcriptText) {
+        if (voiceStatusLabel) voiceStatusLabel.textContent = statusText || 'VOICE ACTIVATED';
+        if (voicePopupState) voicePopupState.textContent = stateText || 'Listening…';
+        if (voicePopupTranscript) voicePopupTranscript.textContent = transcriptText || 'Speak your request…';
+        if (voicePopupOverlay) voicePopupOverlay.classList.add('active');
+        if (btnVoice) btnVoice.classList.add('listening');
+    }
+
+    function hideVoicePopup() {
+        if (voicePopupOverlay) voicePopupOverlay.classList.remove('active');
+        if (btnVoice) btnVoice.classList.remove('listening');
+    }
+
+    function speakOutLoud(text) {
+        if ('speechSynthesis' in window && text) {
+            try {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                window.speechSynthesis.speak(utterance);
+            } catch (e) {
+                console.warn('Speech synthesis error:', e);
+            }
+        }
+    }
+
+    function initSpeechRecognition() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            return null;
+        }
+
+        const rec = new SpeechRecognition();
+        rec.continuous = false;
+        rec.interimResults = true;
+        rec.lang = 'en-US';
+
+        rec.onstart = () => {
+            showVoicePopup('VOICE ACTIVATED', 'Listening for command…', 'Speak now… e.g. "Open camera", "Check system status"');
+        };
+
+        rec.onresult = (event) => {
+            let interim = '';
+            let final = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    final += event.results[i][0].transcript;
+                } else {
+                    interim += event.results[i][0].transcript;
+                }
+            }
+            const text = (final || interim).trim();
+            if (text) {
+                voicePopupTranscript.textContent = `"${text}"`;
+                commandInput.value = text;
+                btnSend.disabled = false;
+            }
+        };
+
+        rec.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            showVoicePopup('VOICE ERROR', `Speech Error: ${event.error}`, 'Could not capture clear speech. Try typing your command.');
+            btnVoice.classList.remove('listening');
+            setTimeout(hideVoicePopup, 3000);
+            isVoiceActive = false;
+        };
+
+        rec.onend = () => {
+            const recognizedText = commandInput.value.trim();
+            if (recognizedText && isVoiceActive) {
+                showVoicePopup('PROCESSING', 'Executing voice task…', `Command: "${recognizedText}"`);
+                sendCommand(recognizedText).then(() => {
+                    showVoicePopup('COMPLETED', 'Voice task finished ✓', `Executed: "${recognizedText}"`);
+                    speakOutLoud(`Executed command: ${recognizedText}`);
+                    setTimeout(hideVoicePopup, 2200);
+                });
+            } else {
+                hideVoicePopup();
+            }
+            isVoiceActive = false;
+        };
+
+        return rec;
+    }
+
+    function toggleVoiceActivation() {
+        if (isVoiceActive) {
+            if (recognition) {
+                try { recognition.stop(); } catch (e) {}
+            }
+            hideVoicePopup();
+            isVoiceActive = false;
+            return;
+        }
+
+        isVoiceActive = true;
+        recognition = recognition || initSpeechRecognition();
+
+        if (recognition) {
+            try {
+                commandInput.value = '';
+                recognition.start();
+            } catch (err) {
+                showVoicePopup('VOICE ACTIVATED', 'Microphone active…', 'Speak your command…');
+            }
+        } else {
+            // Fallback for browsers without Web Speech API
+            showVoicePopup('VOICE ACTIVATED', 'Voice Assistant Listening…', 'Say "Hey Umily" to background assistant or type below.');
+            setTimeout(() => {
+                hideVoicePopup();
+                isVoiceActive = false;
+            }, 5000);
+        }
+    }
+
+    // =========================================================================
     // System Status
     // =========================================================================
     async function fetchStatus() {
@@ -106,6 +235,17 @@
         };
         const [dotClass, label] = stateLabels[data.assistant_state] || ['idle', 'Online'];
         setStatusDot(dotClass, label);
+
+        // Sync background voice activation with voice popup overlay symbol
+        if (data.assistant_state === 'listening_for_command' || data.assistant_state === 'listening_for_wake_word') {
+            if (!isVoiceActive) {
+                showVoicePopup('VOICE ACTIVATED', 'Voice Listener Running', 'Say "Hey Umily" or click mic to issue command');
+            }
+        } else if (data.assistant_state === 'processing') {
+            showVoicePopup('PROCESSING', 'Planning task execution…', 'Gemini AI decomposing steps…');
+        } else if (data.assistant_state === 'executing') {
+            showVoicePopup('EXECUTING', 'Executing task actions…', 'Running system tools…');
+        }
     }
 
     function setStatusDot(dotClass, label) {
@@ -136,8 +276,9 @@
             const data = await apiPost('/command', { command: text });
             activeTaskId = data.task_id;
             
-            // Add Assistant Response Message
-            appendChatMessage('assistant', data.message || `Processing command: "${text}"`);
+            // Add Assistant Response Message with detailed task result
+            const displayResponse = data.result || data.message || `Processing command: "${text}"`;
+            appendChatMessage('assistant', displayResponse);
             
             commandInput.value = '';
             
@@ -147,8 +288,10 @@
             // Start real-time polling for task progress
             startTaskPolling(data.task_id);
 
+            return data;
+
         } catch (err) {
-            appendChatMessage('assistant', `Error: Unable to process command. (${err.message})`);
+            appendChatMessage('assistant', `Error executing command: ${err.message}`);
             setStatusDot('error', 'Error');
         } finally {
             isSending = false;
@@ -393,6 +536,21 @@
     });
 
     btnSend.addEventListener('click', () => sendCommand());
+
+    // Voice Activation button event listener
+    if (btnVoice) {
+        btnVoice.addEventListener('click', toggleVoiceActivation);
+    }
+
+    if (btnStopVoice) {
+        btnStopVoice.addEventListener('click', () => {
+            if (recognition) {
+                try { recognition.stop(); } catch (e) {}
+            }
+            hideVoicePopup();
+            isVoiceActive = false;
+        });
+    }
 
     // Suggestion chips
     document.querySelectorAll('.suggestion-chip').forEach(chip => {

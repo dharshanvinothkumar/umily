@@ -152,9 +152,14 @@ class AgentExecutor:
             completed_count += 1
 
         # All steps completed successfully
-        summary_msg = f"Task #{task_id} completed successfully ({completed_count}/{len(plan.steps)} steps)."
+        step_results = [s.get("result") for s in executed_actions if s.get("result")]
+        if step_results:
+            summary_msg = "\n".join(step_results)
+        else:
+            summary_msg = f"Task #{task_id} completed successfully ({completed_count}/{len(plan.steps)} steps)."
+
         self.task_repo.update_status(task_id, TaskStatus.COMPLETED, result=summary_msg)
-        logger.info(summary_msg)
+        logger.info(f"Task #{task_id} completed: {summary_msg}")
 
         return ActionResult(
             success=True,
@@ -163,6 +168,7 @@ class AgentExecutor:
             completed_steps=completed_count,
             total_steps=len(plan.steps),
         )
+
 
     def resume_after_confirmation(self, task_id: int) -> ActionResult:
         """Resume execution of a task after user confirms pending action."""

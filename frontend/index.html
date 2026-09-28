@@ -72,6 +72,9 @@
                             autocomplete="off"
                             spellcheck="false"
                         >
+                        <button class="voice-btn" id="btn-voice" title="Activate Voice Assistant">
+                            <span id="btn-voice-icon">🎙️</span>
+                        </button>
                         <button class="send-btn" id="btn-send" disabled title="Send command">
                             <span id="btn-send-label">➤</span>
                         </button>
@@ -148,6 +151,35 @@
             </div>
             <div class="history-modal-list" id="history-modal-list">
                 <!-- Task items -->
+            </div>
+        </div>
+    <!-- Voice Activated Pop-Up Symbol Widget -->
+    <div class="voice-popup-overlay" id="voice-popup-overlay">
+        <div class="voice-popup-card">
+            <div class="voice-popup-header">
+                <div class="voice-symbol-ring">
+                    <div class="voice-pulse-ring"></div>
+                    <div class="voice-pulse-ring delay"></div>
+                    <div class="voice-mic-badge">🎙️</div>
+                </div>
+                <div class="voice-popup-info">
+                    <div class="voice-status-pill">
+                        <span class="voice-dot"></span>
+                        <span id="voice-status-label">VOICE ACTIVATED</span>
+                    </div>
+                    <div class="voice-popup-state" id="voice-popup-state">Listening to your command…</div>
+                </div>
+                <button class="voice-close-btn" id="btn-stop-voice" title="Stop Voice">✕</button>
+            </div>
+            <div class="voice-audio-waves" id="voice-audio-waves">
+                <span class="wave-bar"></span>
+                <span class="wave-bar"></span>
+                <span class="wave-bar"></span>
+                <span class="wave-bar"></span>
+                <span class="wave-bar"></span>
+            </div>
+            <div class="voice-transcript-box" id="voice-popup-transcript">
+                Speak now... e.g. "Open camera", "Check system status", etc.
             </div>
         </div>
     </div>

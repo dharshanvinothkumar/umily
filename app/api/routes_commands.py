@@ -51,7 +51,7 @@ def handle_command(body: CommandRequest, db: Session = Depends(get_db)):
 
     return CommandResponse(
         task_id=task.id,
-        message=exec_result.message,
+        message=t_resp.result or exec_result.message if t_resp else exec_result.message,
         status=status_str,
         confirmation_required=t_resp.confirmation_required if t_resp else (status_str == "waiting_confirmation"),
         pending_step=t_resp.pending_step if t_resp else None,
